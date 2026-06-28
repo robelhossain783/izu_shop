@@ -16,12 +16,12 @@ function TrashIcon({ size }: { size: number }) {
 export default function CartSidebar() {
   const { cart, removeFromCart, updateQuantity, closeCart, isCartOpen, cartCount, cartTotal } = useCart();
   const pathname = usePathname();
-  if (pathname?.startsWith("/izu_shop/auth")) return null;
+  if (pathname?.startsWith("/auth")) return null;
 
   const handleCheckout = () => {
     if (cart.length === 0) return;
     const first = cart[0];
-    window.location.href = `/izu_shop/checkout/${first.product.slug}?qty=${first.quantity}`;
+    window.location.href = `/checkout/${first.product.slug}?qty=${first.quantity}`;
   };
 
   return (
@@ -63,7 +63,7 @@ export default function CartSidebar() {
                     </div>
                     <div className="izu-cart-drawer-item-info">
                       <a
-                        href={`/izu_shop/product/${item.product.slug}`}
+                        href={`/product/${item.product.slug}`}
                         className="izu-cart-drawer-item-name"
                         onClick={closeCart}
                       >

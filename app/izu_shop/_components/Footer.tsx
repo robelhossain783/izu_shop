@@ -8,7 +8,8 @@ export default function Footer() {
       fontSize: 14,
     }}>
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 32, marginBottom: 32 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 32, marginBottom: 32 }}
+          className="izu-footer-grid">
           <div>
             <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", marginBottom: 12 }}>
               Izu<span style={{ color: "#e8320a" }}>Shop</span>
@@ -21,10 +22,10 @@ export default function Footer() {
           <div>
             <h4 style={{ color: "#fff", marginBottom: 12, fontSize: 14 }}>Quick Links</h4>
             <ul style={{ listStyle: "none", padding: 0, lineHeight: 2.2 }}>
-              <li><a href="/izu_shop" style={{ color: "#999", textDecoration: "none" }}>Home</a></li>
-              <li><a href="/izu_shop/cart" style={{ color: "#999", textDecoration: "none" }}>Cart</a></li>
-              <li><a href="/izu_shop/orders" style={{ color: "#999", textDecoration: "none" }}>Orders</a></li>
-              <li><a href="/izu_shop/auth" style={{ color: "#999", textDecoration: "none" }}>Login</a></li>
+              <li><a href="/" style={{ color: "#999", textDecoration: "none" }}>Home</a></li>
+              <li><a href="/cart" style={{ color: "#999", textDecoration: "none" }}>Cart</a></li>
+              <li><a href="/orders" style={{ color: "#999", textDecoration: "none" }}>Orders</a></li>
+              <li><a href="/auth" style={{ color: "#999", textDecoration: "none" }}>Login</a></li>
             </ul>
           </div>
           <div>

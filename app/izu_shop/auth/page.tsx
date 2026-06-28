@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../auth-context";
 import Header from "../_components/Header";
 import Footer from "../_components/Footer";
@@ -11,6 +12,7 @@ function Spinner() {
 
 function AuthForm() {
   const { user, login, register } = useAuth();
+  const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -22,22 +24,9 @@ function AuthForm() {
   const [loading, setLoading] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
 
-  if (user) {
-    return (
-      <>
-        <Header />
-        <div style={{ maxWidth: 420, margin: "0 auto", padding: "80px 16px", textAlign: "center" }}>
-          <div style={{ width: 68, height: 68, borderRadius: 16, background: "#e8320a", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-          </div>
-          <h2 style={{ fontSize: 24, fontWeight: 700, color: "#222831", marginBottom: 8 }}>Welcome back, {user.first_name || user.username}!</h2>
-          <p style={{ color: "#252a34", marginBottom: 28, fontSize: 14 }}>You are already logged in.</p>
-          <a href="/izu_shop" style={{ display: "inline-block", background: "#e8320a", color: "#fff", padding: "12px 36px", borderRadius: 8, textDecoration: "none", fontWeight: 600, fontSize: 14 }}>Continue Shopping</a>
-        </div>
-        <Footer />
-      </>
-    );
-  }
+  useEffect(() => {
+    if (user) router.replace("/");
+  }, [user, router]);
 
   async function handleCredentialsSubmit(e: React.FormEvent) {
     e.preventDefault();

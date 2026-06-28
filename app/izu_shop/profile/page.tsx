@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../auth-context";
 import Header from "../_components/Header";
 import Footer from "../_components/Footer";
@@ -69,6 +70,7 @@ const inputStyle = {
 
 function ProfileContent() {
   const isMobile = useMedia("(max-width: 767px)");
+  const router = useRouter();
   const { user, isLoading, updateUser, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<"info" | "orders">("info");
   const [editing, setEditing] = useState(false);
@@ -158,7 +160,7 @@ function ProfileContent() {
             </div>
             <h2 style={{ fontSize: 22, fontWeight: 800, color: theme.dark, margin: "0 0 8px" }}>Login Required</h2>
             <p style={{ color: theme.text, fontSize: 14, lineHeight: 1.6, maxWidth: 340, margin: "0 auto 28px" }}>Sign in to manage your profile, track orders, and more.</p>
-            <a href="/izu_shop/auth" style={{
+            <a href="/auth" style={{
               display: "inline-flex", alignItems: "center", gap: 8,
               background: `linear-gradient(135deg, ${theme.primary}, ${theme.orange})`, color: theme.white,
               padding: "13px 36px", borderRadius: 12, textDecoration: "none", fontWeight: 700, fontSize: 15,
@@ -186,7 +188,7 @@ function ProfileContent() {
       <Header />
       <div style={{ background: theme.bg, minHeight: "calc(100vh - 120px)" }}>
         <div style={{
-          maxWidth: isMobile ? "100%" : 1060,
+          maxWidth: isMobile ? "100%" : 1320,
           margin: "0 auto",
           padding: isMobile ? "0 0 40px" : "28px 20px 60px",
         }}>
@@ -492,7 +494,7 @@ function ProfileContent() {
                       </div>
                       <h3 style={{ fontSize: 17, fontWeight: 700, color: theme.dark, margin: "0 0 6px" }}>No Orders Yet</h3>
                       <p style={{ fontSize: 14, color: theme.muted, margin: "0 0 24px" }}>Start exploring our products.</p>
-                      <a href="/izu_shop" style={{
+                      <a href="/" style={{
                         display: "inline-flex", alignItems: "center", gap: 8,
                         background: `linear-gradient(135deg, ${theme.primary}, ${theme.orange})`, color: theme.white,
                         padding: "12px 32px", borderRadius: 10, textDecoration: "none", fontWeight: 700, fontSize: 14,
@@ -593,7 +595,7 @@ function ProfileContent() {
             {isMobile && (
               <div style={{ borderTop: `8px solid ${theme.bg}`, padding: "16px 20px 8px" }}>
                 <div style={{ display: "flex", gap: 10 }}>
-                  <a href="/izu_shop/orders" style={{
+                  <a href="/orders" style={{
                     flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                     background: theme.white, border: `1.5px solid ${theme.border}`,
                     padding: "12px 16px", borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: "pointer", textDecoration: "none", color: theme.text,
@@ -642,7 +644,7 @@ function ProfileContent() {
                 background: theme.white, color: theme.text, border: `1.5px solid ${theme.border}`, borderRadius: 12,
                 fontSize: 14, fontWeight: 600, cursor: "pointer", padding: "12px 28px", flex: 1,
               }}>Cancel</button>
-              <button onClick={() => { logout(); setConfirmLogout(false); }} style={{
+              <button onClick={() => { logout(); setConfirmLogout(false); router.push("/"); }} style={{
                 display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
                 background: "#dc2626", color: theme.white, border: "none", borderRadius: 12,
                 fontSize: 14, fontWeight: 700, cursor: "pointer", padding: "12px 28px", flex: 1,

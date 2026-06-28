@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useCart } from "./cart-context";
 import Header from "./_components/Header";
 import Footer from "./_components/Footer";
@@ -68,6 +68,21 @@ function CartIcon({ size }: { size: number }) {
     </svg>
   );
 }
+function ChevronLeft() {
+  return (
+    <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
+  );
+}
+function ChevronRight() {
+  return (
+    <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="9 18 15 12 9 6" />
+    </svg>
+  );
+}
+
 /* ─── API ─── */
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "";
 
@@ -100,27 +115,230 @@ const benefits = [
   { icon: <PercentIcon size={22} />, label: "Best Prices", desc: "Price match promise" },
 ];
 
-const PAGE_SIZE = 20;
+/* ─── Grid Product Card (for Featured grid) ─── */
+function ProductCard({
+  product, index, onAddToCart,
+}: { product: Product; index: number; onAddToCart: (e: React.MouseEvent, p: Product) => void }) {
+  const originalPrice = parseFloat(product.regular_price || "0");
+  const sellPrice = parseFloat(product.sell_price || "0");
+  const discount = calcDiscount(originalPrice, sellPrice);
+  const categoryName =
+    typeof product.category === "object" && product.category
+      ? (product.category as { name?: string }).name || ""
+      : "";
+  return (
+    <a href={`/product/${product.slug}`} className="pcard">
+      {discount > 0 && <div className="pcard-badge">-{discount}%</div>}
+      <div className="pcard-img" style={{ background: `linear-gradient(135deg, ${COLORS[index % COLORS.length]}12, ${COLORS[index % COLORS.length]}06)` }}>
+        {product.image ? (
+          <img src={product.image} alt={product.name} className="pcard-img-photo" />
+        ) : (
+          <>
+            <span className="pcard-img-emoji">{EMOJIS[index % EMOJIS.length]}</span>
+            {categoryName && <span className="pcard-img-label">{categoryName}</span>}
+          </>
+        )}
+      </div>
+      <div className="pcard-body">
+        <h4 className="pcard-name">{product.name}</h4>
+        <div className="pcard-prices">
+          {originalPrice > 0 && <span className="pcard-original">{formatPrice(originalPrice)}</span>}
+          <span className="pcard-sell">{formatPrice(sellPrice)}</span>
+        </div>
+        <div className="pcard-actions">
+          <button type="button" className="pcard-btn" onClick={(e) => onAddToCart(e, product)}>
+            <CartIcon size={12} /> Add to Cart
+          </button>
+        </div>
+      </div>
+    </a>
+  );
+}
+
+/* ─── Slider Card (for Category row sliders) ─── */
+function SliderCard({
+  product, index, onAddToCart,
+}: { product: Product; index: number; onAddToCart: (e: React.MouseEvent, p: Product) => void }) {
+  const originalPrice = parseFloat(product.regular_price || "0");
+  const sellPrice = parseFloat(product.sell_price || "0");
+  const discount = calcDiscount(originalPrice, sellPrice);
+  return (
+    <a key={product.id} href={`/product/${product.slug}`} className="category-card">
+      {discount > 0 && <div className="category-card-badge">-{discount}%</div>}
+      <div className="category-card-img">
+        {product.image ? (
+          <img src={product.image} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }} />
+        ) : (
+          <span className="offer-card-img-emoji">{EMOJIS[index % EMOJIS.length]}</span>
+        )}
+      </div>
+      <div className="category-card-body">
+        <h4 className="category-card-name">{product.name}</h4>
+        <div className="category-card-prices">
+          {originalPrice > 0 && <span className="category-card-original">{formatPrice(originalPrice)}</span>}
+          <span className="category-card-discounted">{formatPrice(sellPrice)}</span>
+        </div>
+        <div className="offer-card-actions" style={{ marginTop: 4 }}>
+          <button type="button" className="offer-card-btn" onClick={(e) => onAddToCart(e, product)}>
+            <CartIcon size={13} /> Add to Cart
+          </button>
+        </div>
+      </div>
+    </a>
+  );
+}
+
+/* ─── Category Slider Section ─── */
+function CategorySlider({
+  slug, name, products, onAddToCart,
+}: { slug: string; name: string; products: Product[]; onAddToCart: (e: React.MouseEvent, p: Product) => void }) {
+  const rowRef = useRef<HTMLDivElement>(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+
+  function updateState() {
+    const el = rowRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 1);
+    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 1);
+  }
+
+  useEffect(() => {
+    const el = rowRef.current;
+    if (!el) return;
+    el.scrollLeft = 0;
+    const timer = setTimeout(updateState, 120);
+    const onResize = () => updateState();
+    window.addEventListener("resize", onResize);
+    return () => { clearTimeout(timer); window.removeEventListener("resize", onResize); };
+  }, [products]);
+
+  function scrollBy(dir: "left" | "right") {
+    const el = rowRef.current;
+    if (!el) return;
+    const card = el.querySelector<HTMLElement>(".category-card");
+    const style = window.getComputedStyle(el);
+    const gap = parseFloat(style.gap || style.columnGap) || 14;
+    const amount = (card?.offsetWidth ?? 180) + gap;
+    el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
+    setTimeout(updateState, 350);
+  }
+
+  return (
+    <section className="shop-section">
+      <div className="shop-section-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <h2 className="shop-section-title">{name}</h2>
+        <a href={`/izu_shop/category/${slug}`} className="cat-view-all-link">
+          View All
+          <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 4 }}>
+            <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+          </svg>
+        </a>
+      </div>
+
+      <div className="cat-slider-wrap">
+        {/* Left button */}
+        <button
+          className="cat-slide-btn cat-slide-left"
+          aria-label="Scroll left"
+          onClick={() => scrollBy("left")}
+          style={{
+            opacity: canLeft ? 1 : 0,
+            pointerEvents: canLeft ? "auto" : "none",
+            transition: "opacity 0.2s",
+          }}
+        >
+          <ChevronLeft />
+        </button>
+
+        <div
+          className="cat-slider-row"
+          ref={rowRef}
+          onScroll={updateState}
+        >
+          {products.map((product, index) => (
+            <SliderCard
+              key={product.id}
+              product={product}
+              index={index}
+              onAddToCart={onAddToCart}
+            />
+          ))}
+        </div>
+
+        {/* Right button */}
+        <button
+          className="cat-slide-btn cat-slide-right"
+          aria-label="Scroll right"
+          onClick={() => scrollBy("right")}
+          style={{
+            opacity: canRight ? 1 : 0,
+            pointerEvents: canRight ? "auto" : "none",
+            transition: "opacity 0.2s",
+          }}
+        >
+          <ChevronRight />
+        </button>
+      </div>
+
+      {/* View All below slider on mobile */}
+      <div className="shop-view-all-row">
+        <a href={`/izu_shop/category/${slug}`} className="shop-view-all-btn primary">
+          View All {name}
+        </a>
+      </div>
+    </section>
+  );
+}
 
 /* ─── Main Content ─── */
 function ShopContent() {
   const { addToCart, openCart } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [showAll, setShowAll] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(10);
 
   useEffect(() => {
-    fetchProducts().then((data) => {
-      setProducts(data);
+    Promise.all([
+      fetchProducts(),
+      fetch(`${BASE_URL}/api/categories/list/`).then((r) => r.json()).catch(() => []),
+    ]).then(([prods, cats]) => {
+      const catList = Array.isArray(cats)
+        ? cats
+        : Array.isArray(cats?.results)
+          ? cats.results
+          : Array.isArray(cats?.data)
+            ? cats.data
+            : [];
+      setProducts(prods);
+      setCategories(catList);
       setLoading(false);
-    });
+    }).catch(() => setLoading(false));
   }, []);
 
-  const displayedProducts = showAll ? products : products.slice(0, visibleCount);
-  const hasMore = !showAll && visibleCount < products.length;
+  const displayedProducts = products.slice(0, visibleCount);
+  const hasMore = visibleCount < products.length;
 
-  function handleAddToCart(product: Product) {
+  const productsByCategory = useMemo(() => {
+    const map = new Map<string, { slug: string; name: string; products: Product[] }>();
+    categories.forEach((cat) => {
+      if (cat.slug) map.set(cat.slug, { slug: cat.slug, name: cat.name || cat.slug, products: [] });
+    });
+    products.forEach((product) => {
+      if (typeof product.category === "object" && product.category) {
+        const slug = (product.category as { slug?: string }).slug;
+        if (slug && map.has(slug)) {
+          map.get(slug)!.products.push(product);
+        }
+      }
+    });
+    return Array.from(map.values()).filter((g) => g.products.length > 0);
+  }, [products, categories]);
+
+  function handleAddToCart(e: React.MouseEvent, product: Product) {
+    e.preventDefault();
+    e.stopPropagation();
     addToCart(product, 1);
     openCart();
   }
@@ -164,119 +382,63 @@ function ShopContent() {
       </section>
 
       <div className="offer-page" id="izu-grid">
-        <div className="offer-section-header">
-          <h2 className="offer-section-title">Featured Products</h2>
-          <p className="offer-section-desc">Handpicked products at the best prices — limited stock available</p>
-        </div>
-
         {loading ? (
-          <div className="offer-empty">
-            <div className="offer-empty-icon">⏳</div>
-            <h3 className="offer-empty-title">Loading Products...</h3>
+          <div className="offer-empty" style={{ paddingTop: 60 }}>
+            <div className="offer-spinner" />
+            <h3 className="offer-empty-title" style={{ marginTop: 20 }}>Loading Products</h3>
             <p className="offer-empty-desc">Please wait while we fetch the latest products for you.</p>
           </div>
         ) : products.length > 0 ? (
           <>
-            <div className="offer-grid">
-            {displayedProducts.map((product, index) => {
-              const originalPrice = parseFloat(product.regular_price || "0");
-              const sellPrice = parseFloat(product.sell_price || "0");
-              const discount = calcDiscount(originalPrice, sellPrice);
-              const color = COLORS[index % COLORS.length];
-              const emoji = EMOJIS[index % EMOJIS.length];
-              const categoryName =
-                typeof product.category === "object" && product.category
-                  ? (product.category as { name?: string }).name || ""
-                  : "";
-
-              return (
-                <a key={product.id} href={`/izu_shop/product/${product.slug}`} className="offer-card" style={{ textDecoration: "none" }}>
-                  {discount > 0 && <div className="offer-card-badge">-{discount}%</div>}
-                  <div className="offer-card-img" style={{ background: `linear-gradient(135deg, ${color}15, ${color}08)` }}>
-                    {product.image ? (
-                      <img src={product.image} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }} />
-                    ) : (
-                      <span className="offer-card-img-emoji">{emoji}</span>
-                    )}
-                    {!product.image && categoryName && <span className="offer-card-img-label">{categoryName}</span>}
-                  </div>
-                  <div className="offer-card-body">
-                    <h3 className="offer-card-name">{product.name}</h3>
-                    <div className="offer-card-prices">
-                      {originalPrice > 0 && <span className="offer-card-original">{formatPrice(originalPrice)}</span>}
-                      <span className="offer-card-discounted">{formatPrice(sellPrice)}</span>
-                    </div>
-                    {discount > 0 && (
-                      <div className="offer-card-save">
-                        <PercentIcon size={12} /> Save {formatPrice(originalPrice - sellPrice)}
-                      </div>
-                    )}
-                    <div className="offer-card-actions">
-                      <button type="button" className="offer-card-btn" style={{ width: "100%" }}
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAddToCart(product); }}>
-                        <CartIcon size={14} /> Add to Cart
-                      </button>
-                    </div>
-                  </div>
+            {/* ── Featured Products — wrapping grid ── */}
+            <div className="shop-section">
+              <div className="shop-section-header">
+                <h2 className="shop-section-title">Featured Products</h2>
+              </div>
+              <div className="pcard-grid">
+                {displayedProducts.map((product, index) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    index={index}
+                    onAddToCart={handleAddToCart}
+                  />
+                ))}
+              </div>
+              <div className="shop-view-all-row">
+                {hasMore && (
+                  <button
+                    className="shop-view-all-btn outline"
+                    onClick={() => setVisibleCount((prev) => prev + 10)}
+                  >
+                    See More
+                  </button>
+                )}
+                <a href="/izu_shop/all-products" className="shop-view-all-btn primary">
+                  View All Products
                 </a>
-              );
-            })}
-          </div>
-          {!showAll && products.length > PAGE_SIZE && (
-            <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 32 }}>
-              {hasMore && (
-                <button
-                  onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
-                  style={{
-                    background: "none", border: "2px solid #e8320a", color: "#e8320a",
-                    padding: "10px 36px", borderRadius: 8, fontSize: 14, fontWeight: 600,
-                    cursor: "pointer", transition: "all 0.2s", fontFamily: "inherit",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "#e8320a"; e.currentTarget.style.color = "#fff"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#e8320a"; }}
-                >
-                  See More
-                </button>
-              )}
-              <button
-                onClick={() => setShowAll(true)}
-                style={{
-                  background: "#e8320a", border: "2px solid #e8320a", color: "#fff",
-                  padding: "10px 36px", borderRadius: 8, fontSize: 14, fontWeight: 600,
-                  cursor: "pointer", transition: "all 0.2s", fontFamily: "inherit",
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "#cc2908"; e.currentTarget.style.borderColor = "#cc2908"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "#e8320a"; e.currentTarget.style.borderColor = "#e8320a"; }}
-              >
-                View All
-              </button>
+              </div>
             </div>
-          )}
-          {showAll && products.length > PAGE_SIZE && (
-            <div style={{ textAlign: "center", marginTop: 32 }}>
-              <button
-                onClick={() => { setShowAll(false); setVisibleCount(PAGE_SIZE); }}
-                style={{
-                  background: "none", border: "2px solid #e8320a", color: "#e8320a",
-                  padding: "10px 36px", borderRadius: 8, fontSize: 14, fontWeight: 600,
-                  cursor: "pointer", transition: "all 0.2s", fontFamily: "inherit",
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "#e8320a"; e.currentTarget.style.color = "#fff"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#e8320a"; }}
-              >
-                Show Less
-              </button>
-            </div>
-          )}
+
+            {/* ── Category sections — single-row horizontal slider ── */}
+            {productsByCategory.map((group) => (
+              <CategorySlider
+                key={group.slug}
+                slug={group.slug}
+                name={group.name}
+                products={group.products}
+                onAddToCart={handleAddToCart}
+              />
+            ))}
           </>
-        ) :
+        ) : (
           <div className="offer-empty">
-            <div className="offer-empty-icon">🎉</div>
-            <h3 className="offer-empty-title">No Products Available Right Now</h3>
+            <div className="offer-spinner" />
+            <h3 className="offer-empty-title" style={{ marginTop: 20 }}>No Products Available Right Now</h3>
             <p className="offer-empty-desc">We don&apos;t have any active products at the moment. Please check back later.</p>
-            <a href="/izu_shop" className="offer-empty-btn">Refresh</a>
+            <a href="/" className="offer-empty-btn">Refresh</a>
           </div>
-        }
+        )}
       </div>
 
       <section className="offer-benefits" id="benefits">

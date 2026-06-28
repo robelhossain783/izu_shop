@@ -115,7 +115,7 @@ function CheckoutContent({ slug }: { slug: string }) {
       <div className="product-details-container" style={{ textAlign: "center", padding: "100px 16px" }}>
         <h2 style={{ fontSize: "24px", color: "var(--primary)", marginBottom: "8px" }}>Checkout Error</h2>
         <p style={{ color: "var(--text-secondary)", marginBottom: "24px" }}>The selected product could not be loaded for checkout.</p>
-        <a href="/izu_shop" style={{ background: "var(--primary)", color: "#fff", padding: "10px 24px", borderRadius: "var(--radius)", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>
+        <a href="/" style={{ background: "var(--primary)", color: "#fff", padding: "10px 24px", borderRadius: "var(--radius)", fontWeight: "600", textDecoration: "none", display: "inline-block" }}>
           Back to Home
         </a>
       </div>
@@ -336,7 +336,7 @@ function CheckoutContent({ slug }: { slug: string }) {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                   Download Receipt
                 </button>
-                <a href="/izu_shop" style={{ background: "var(--primary)", color: "#fff", textDecoration: "none", padding: "12px 30px", borderRadius: "30px", fontWeight: "700", transition: "all 0.2s", display: "inline-flex", alignItems: "center" }} onMouseEnter={(e) => e.currentTarget.style.filter = "brightness(0.9)"} onMouseLeave={(e) => e.currentTarget.style.filter = "none"}>
+                <a href="/" style={{ background: "var(--primary)", color: "#fff", textDecoration: "none", padding: "12px 30px", borderRadius: "30px", fontWeight: "700", transition: "all 0.2s", display: "inline-flex", alignItems: "center" }} onMouseEnter={(e) => e.currentTarget.style.filter = "brightness(0.9)"} onMouseLeave={(e) => e.currentTarget.style.filter = "none"}>
                   Continue Shopping
                 </a>
               </div>

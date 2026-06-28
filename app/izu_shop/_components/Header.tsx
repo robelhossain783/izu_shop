@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { useCart } from "../cart-context";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../auth-context";
 
 /* ─── Icons ─── */
@@ -90,9 +91,10 @@ function useMedia(query: string) {
 export default function Header() {
   const isMobile = useMedia("(max-width: 767px)");
   const { cartCount, openCart } = useCart();
+  const router = useRouter();
   const { user, logout } = useAuth();
   const pathname = usePathname();
-  const isAuthPage = pathname?.startsWith("/izu_shop/auth");
+  const isAuthPage = pathname?.startsWith("/auth");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Product[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -295,9 +297,9 @@ export default function Header() {
 
   return (
     <>
-      <header style={styles.header}>
+      <header style={{ ...styles.header, padding: isMobile ? "6px 0" : "12px 16px" }}>
         {isMobile ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 20px", position: "relative", height: 56 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 16px", position: "relative", height: 48 }}>
             <button onClick={handleSidebarOpen} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex" }}>
               <MenuIcon size={22} />
             </button>
@@ -345,7 +347,7 @@ export default function Header() {
                     <div style={{ padding: 20, textAlign: "center", color: "#999", fontSize: 13 }}>Searching...</div>
                   ) : results.length > 0 ? (
                     results.map((p) => (
-                      <a key={p.id} href={`/izu_shop/product/${p.slug}`}
+                      <a key={p.id} href={`/product/${p.slug}`}
                         style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", textDecoration: "none", borderBottom: "1px solid #f5f5f5" }}
                         onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#f9f9f9"; }}
                         onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ""; }}
@@ -369,13 +371,13 @@ export default function Header() {
 
             <nav style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
               {user ? (
-                <a href="/izu_shop/profile" style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 8, textDecoration: "none", color: "#1a1a1a" }}>
+                <a href="/profile" style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 8, textDecoration: "none", color: "#1a1a1a" }}>
                   <div style={{ width: 30, height: 30, borderRadius: "50%", background: "#e8320a", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800 }}>
                     {(user.first_name || user.username)[0].toUpperCase()}
                   </div>
                 </a>
               ) : (
-                <a href="/izu_shop/auth" style={{ display: "flex", alignItems: "center", gap: 6, ...styles.navLink() }}>
+                <a href="/auth" style={{ display: "flex", alignItems: "center", gap: 6, ...styles.navLink() }}>
                   <UserIcon size={20} />
                 </a>
               )}
@@ -425,7 +427,7 @@ export default function Header() {
                   <div style={{ padding: 20, textAlign: "center", color: "#999", fontSize: 13 }}>Searching...</div>
                 ) : results.length > 0 ? (
                   results.map((p) => (
-                    <a key={p.id} href={`/izu_shop/product/${p.slug}`}
+                    <a key={p.id} href={`/product/${p.slug}`}
                       style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", textDecoration: "none", borderBottom: "1px solid #f5f5f5" }}
                       onClick={() => { setMobileSearchOpen(false); setShowDropdown(false); }}
                     >
@@ -460,8 +462,8 @@ export default function Header() {
             padding: "0 16px",
           }}>
             {[
-              { href: "/izu_shop", icon: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10", label: "Home" },
-              { href: "/izu_shop/orders", icon: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8", label: "Orders" },
+              { href: "/", icon: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10", label: "Home" },
+              { href: "/orders", icon: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8", label: "Orders" },
             ].map((item) => (
               <a key={item.label} href={item.href}
                 style={{
@@ -516,7 +518,7 @@ export default function Header() {
                     <div style={{ padding: "20px 16px", textAlign: "center", fontSize: 13, color: "#999" }}>Loading...</div>
                   ) : categories.length > 0 ? (
                     categories.map((cat, i) => (
-                      <a key={cat.id} href={`/izu_shop/category/${cat.slug}`}
+                      <a key={cat.id} href={`/category/${cat.slug}`}
                         onClick={() => setCatDropdownOpen(false)}
                         style={{
                           display: "block", padding: "10px 14px", fontSize: 13, fontWeight: 500,
@@ -536,6 +538,105 @@ export default function Header() {
               )}
             </div>
           </div>
+        </nav>
+      )}
+
+      {/* Mobile Bottom Nav */}
+      {isMobile && (
+        <nav style={{
+          position: "fixed", bottom: 0, left: 0, right: 0,
+          background: "#fff", borderTop: "1px solid #f0f0f0",
+          display: "flex", alignItems: "center", justifyContent: "space-around",
+          padding: "6px 0", zIndex: 150,
+          boxShadow: "0 -2px 12px rgba(0,0,0,0.06)",
+        }}>
+          {/* Home */}
+          <a href="/"
+            style={{
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+              fontSize: 10, fontWeight: 600, color: pathname === "/" ? "#e8320a" : "#888",
+              textDecoration: "none", padding: "4px 12px", borderRadius: 8, transition: "background 0.15s",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "#fef2f0"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = ""; }}>
+            <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10" /></svg>
+            Home
+          </a>
+          {/* Menu */}
+          <button onClick={handleSidebarOpen}
+            style={{
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+              fontSize: 10, fontWeight: 600, color: "#888",
+              background: "none", border: "none", cursor: "pointer", padding: "4px 12px",
+              borderRadius: 8, transition: "background 0.15s", fontFamily: "inherit",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "#fef2f0"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = ""; }}>
+            <MenuIcon size={20} />
+            Menu
+          </button>
+          {/* Cart */}
+          <button onClick={openCart}
+            style={{
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+              fontSize: 10, fontWeight: 600, color: "#888",
+              background: "none", border: "none", cursor: "pointer", padding: "4px 12px",
+              position: "relative", borderRadius: 8, transition: "background 0.15s",
+              fontFamily: "inherit",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "#fef2f0"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = ""; }}>
+            <div style={{ position: "relative" }}>
+              <CartIcon size={20} />
+              {cartCount > 0 && (
+                <span style={{
+                  position: "absolute", top: -6, right: -8,
+                  background: "#e8320a", color: "#fff", fontSize: 9, fontWeight: 800,
+                  width: 16, height: 16, borderRadius: "50%",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>{cartCount}</span>
+              )}
+            </div>
+            Cart
+          </button>
+          {/* Orders */}
+          <a href="/orders"
+            style={{
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+              fontSize: 10, fontWeight: 600, color: pathname === "/orders" ? "#e8320a" : "#888",
+              textDecoration: "none", padding: "4px 12px", borderRadius: 8, transition: "background 0.15s",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "#fef2f0"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = ""; }}>
+            <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" /></svg>
+            Orders
+          </a>
+          {/* Account */}
+          {user ? (
+            <a href="/profile"
+              style={{
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+                fontSize: 10, fontWeight: 600, color: pathname === "/profile" ? "#e8320a" : "#888",
+                textDecoration: "none", padding: "4px 12px", borderRadius: 8, transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "#fef2f0"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = ""; }}>
+              <UserIcon size={20} />
+              Account
+            </a>
+          ) : (
+            <a href="/auth"
+              style={{
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+                fontSize: 10, fontWeight: 600, color: pathname === "/auth" ? "#e8320a" : "#888",
+                textDecoration: "none", padding: "4px 12px", borderRadius: 8, transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "#fef2f0"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = ""; }}>
+              <UserIcon size={20} />
+              Account
+            </a>
+          )}
         </nav>
       )}
 
@@ -592,7 +693,7 @@ export default function Header() {
                   categories.map((cat) => (
                     <a
                       key={cat.id}
-                      href={`/izu_shop/category/${cat.slug}`}
+                      href={`/category/${cat.slug}`}
                       style={styles.sidebarSubItem}
                       onClick={() => setSidebarOpen(false)}
                       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#f0f0f0"; }}
@@ -617,21 +718,21 @@ export default function Header() {
           {/* ── Account Section ── */}
           <div style={{ padding: "12px 20px 6px", fontSize: 11, fontWeight: 700, color: "#999", textTransform: "uppercase", letterSpacing: 1, borderTop: "1px solid #f0f0f0", marginTop: 8 }}>Account</div>
 
-          <a href="/izu_shop/orders" style={styles.sidebarItem} onClick={() => setSidebarOpen(false)}>
+          <a href="/orders" style={styles.sidebarItem} onClick={() => setSidebarOpen(false)}>
             <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>
             Orders
           </a>
           {user ? (
             <>
-              <a href="/izu_shop/profile" style={styles.sidebarItem} onClick={() => setSidebarOpen(false)}>
+              <a href="/profile" style={styles.sidebarItem} onClick={() => setSidebarOpen(false)}>
                 <UserIcon size={18} /> Profile
               </a>
-              <button onClick={() => { logout(); setSidebarOpen(false); }} style={{ ...styles.sidebarItem, background: "none", border: "none", width: "100%", textAlign: "left" }}>
+              <button onClick={() => { logout(); setSidebarOpen(false); router.push("/"); }} style={{ ...styles.sidebarItem, background: "none", border: "none", width: "100%", textAlign: "left" }}>
                 <LogoutIcon size={18} /> Logout
               </button>
             </>
           ) : (
-            <a href="/izu_shop/auth" style={styles.sidebarItem} onClick={() => setSidebarOpen(false)}>
+            <a href="/auth" style={styles.sidebarItem} onClick={() => setSidebarOpen(false)}>
               <UserIcon size={18} /> Login / Register
             </a>
           )}

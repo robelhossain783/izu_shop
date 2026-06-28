@@ -55,7 +55,7 @@ function CartContent() {
           <div style={{ fontSize: 64, marginBottom: 20 }}>✅</div>
           <h2 style={{ fontSize: 26, fontWeight: 800, color: "#1a1a1a", marginBottom: 12 }}>Order Placed!</h2>
           <p style={{ fontSize: 14, color: "#555", marginBottom: 28 }}>Thank you for your order. We will contact you soon.</p>
-          <a href="/izu_shop" style={{ display: "inline-block", background: "#e8320a", color: "#fff", padding: "14px 36px", borderRadius: 12, textDecoration: "none", fontWeight: 700 }}>Continue Shopping</a>
+          <a href="/" style={{ display: "inline-block", background: "#e8320a", color: "#fff", padding: "14px 36px", borderRadius: 12, textDecoration: "none", fontWeight: 700 }}>Continue Shopping</a>
         </div>
         <Footer /></>
     );
@@ -65,7 +65,7 @@ function CartContent() {
     <>
       <Header />
       <div style={{ maxWidth: 1280, margin: "0 auto", padding: "24px 16px 48px" }}>
-        <a href="/izu_shop" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 13, color: "#999", textDecoration: "none", marginBottom: 20 }}>
+        <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 13, color: "#999", textDecoration: "none", marginBottom: 20 }}>
           <ChevronLeftIcon size={14} /> Back to Shop
         </a>
         <h1 style={{ fontSize: 26, fontWeight: 800, color: "#1a1a1a", marginBottom: 24 }}>Shopping Cart ({cartCount} items)</h1>
@@ -74,7 +74,7 @@ function CartContent() {
           <div style={{ textAlign: "center", padding: "60px 24px" }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>🛒</div>
             <h3 style={{ fontSize: 20, fontWeight: 700, color: "#1a1a1a", marginBottom: 12 }}>Your cart is empty</h3>
-            <a href="/izu_shop" style={{ display: "inline-block", background: "#e8320a", color: "#fff", padding: "12px 32px", borderRadius: 12, textDecoration: "none", fontWeight: 700 }}>Start Shopping</a>
+            <a href="/" style={{ display: "inline-block", background: "#e8320a", color: "#fff", padding: "12px 32px", borderRadius: 12, textDecoration: "none", fontWeight: 700 }}>Start Shopping</a>
           </div>
         ) : (
           <div className="izu-cart-grid" style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 32, alignItems: "start" }}>
@@ -86,7 +86,7 @@ function CartContent() {
                       : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: 28 }}>📦</div>}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <a href={`/izu_shop/product/${item.product.slug}`} style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a", textDecoration: "none", display: "block", marginBottom: 4 }}>{item.product.name}</a>
+                    <a href={`/product/${item.product.slug}`} style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a", textDecoration: "none", display: "block", marginBottom: 4 }}>{item.product.name}</a>
                     <div style={{ fontSize: 16, fontWeight: 800, color: "#e8320a", marginBottom: 8 }}>{formatPrice(parseFloat(item.product.sell_price) * item.quantity)}</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                       <div style={{ display: "flex", alignItems: "center", border: "1px solid #e8e8e8", borderRadius: 6, overflow: "hidden" }}>

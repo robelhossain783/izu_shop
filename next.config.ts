@@ -44,6 +44,42 @@ const nextConfig = {
         source: "/media/:path*",
         destination: `${backendUrl}/media/:path*`,
       },
+      {
+        source: "/orders",
+        destination: "/izu_shop/orders",
+      },
+      {
+        source: "/cart",
+        destination: "/izu_shop/cart",
+      },
+      {
+        source: "/auth",
+        destination: "/izu_shop/auth",
+      },
+      {
+        source: "/profile",
+        destination: "/izu_shop/profile",
+      },
+      {
+        source: "/checkout",
+        destination: "/izu_shop/checkout",
+      },
+      {
+        source: "/checkout/:slug",
+        destination: "/izu_shop/checkout/:slug",
+      },
+      {
+        source: "/product/:slug",
+        destination: "/izu_shop/product/:slug",
+      },
+      {
+        source: "/category/:slug",
+        destination: "/izu_shop/category/:slug",
+      },
+      {
+        source: "/all-products",
+        destination: "/izu_shop/all-products",
+      },
     ];
   },
 };

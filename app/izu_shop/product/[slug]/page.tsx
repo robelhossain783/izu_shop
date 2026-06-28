@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useCart } from "../../cart-context";
 import { useAuth } from "../../auth-context";
 import Header from "../../_components/Header";
@@ -38,11 +38,6 @@ async function fetchAllProducts(): Promise<Product[]> {
 }
 
 function formatPrice(price: number) { return `৳${price.toLocaleString("en-BD")}`; }
-function calcDiscount(regular: number, sell: number) {
-  if (!regular || regular <= 0) return 0;
-  return Math.round(((regular - sell) / regular) * 100);
-}
-
 function StarRating({ rating, size = 14 }: { rating: number; size?: number }) {
   return (
     <span style={{ display: "inline-flex", gap: 1, alignItems: "center" }}>
@@ -61,7 +56,7 @@ function ReviewSummary({ reviews }: { reviews: { rating: number }[] }) {
   reviews.forEach((r) => { if (r.rating >= 1 && r.rating <= 5) distribution[5 - r.rating]++; });
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 24, padding: 20, background: "#fafafa", border: "1px solid #f0f0f0", borderRadius: 12, marginBottom: 24, alignItems: "start" }}>
+    <div className="izu-review-summary" style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 24, padding: 20, background: "#fafafa", border: "1px solid #f0f0f0", borderRadius: 12, marginBottom: 24, alignItems: "start" }}>
       <div style={{ textAlign: "center", minWidth: 100, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
         <div style={{ fontSize: 42, fontWeight: 900, color: "#1a1a1a", lineHeight: 1 }}>{avg.toFixed(1)}</div>
         <StarRating rating={Math.round(avg)} size={18} />
@@ -96,46 +91,30 @@ function ProductCard({ product, onAddToCart }: { product: Product; onAddToCart: 
 
   return (
     <div style={{ background: "#fff", border: "1px solid #f0f0f0", borderRadius: 12, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-      <a href={`/izu_shop/product/${product.slug}`} style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", flex: 1 }}>
-        <div style={{ aspectRatio: "1/1", background: "#f9f9f9", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, position: "relative", overflow: "hidden" }}>
+      <a href={`/product/${product.slug}`} style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", flex: 1 }}>
+        <div style={{ aspectRatio: "4/5", background: "#f9f9f9", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
           {imageSrc ? (
-            <>
-              <img src={imageSrc} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain", transition: "transform 0.3s" }} />
-              <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.25s", borderRadius: 0 }}
-                className="izu-product-card-view"
-                onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.opacity = "0"; }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 36, height: 36, background: "rgba(255,255,255,0.2)", borderRadius: "50%", padding: 8 }}>
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
-                </svg>
-              </div>
-            </>
+            <img src={imageSrc} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s" }} />
           ) : (
             <span style={{ fontSize: 32 }}>📦</span>
           )}
         </div>
-        <div style={{ padding: "10px 12px", flex: 1, display: "flex", flexDirection: "column" }}>
-          <p style={{ fontSize: 11, fontWeight: 600, color: "#999", marginBottom: 4, textTransform: "uppercase" }}>
-            {typeof product.category === "object" && product.category ? product.category.name || "" : ""}
-          </p>
-          <h3 style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 6, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+        <div style={{ padding: "10px 12px", flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+          <h3 style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", margin: 0 }}>
             {product.name}
           </h3>
-          <div style={{ marginTop: "auto" }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-              <span style={{ fontSize: 16, fontWeight: 800, color: "#e8320a" }}>{formatPrice(sellPrice)}</span>
-              {hasDiscount && <span style={{ fontSize: 11, color: "#999", textDecoration: "line-through" }}>{formatPrice(regularPrice)}</span>}
-            </div>
-            <p style={{ fontSize: 11, color: product.stock > 0 ? "#10b981" : "#ef4444", fontWeight: 600, marginTop: 4 }}>
-              {product.stock > 0 ? `Stock: ${product.stock}` : "Stock Out"}
-            </p>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+            <span style={{ fontSize: 16, fontWeight: 800, color: "#e8320a" }}>{formatPrice(sellPrice)}</span>
+            {hasDiscount && <span style={{ fontSize: 12, color: "#999", textDecoration: "line-through" }}>{formatPrice(regularPrice)}</span>}
           </div>
         </div>
       </a>
-      <button onClick={onAddToCart} disabled={product.stock <= 0}
-        className="offer-card-btn" style={{ borderRadius: 0, marginTop: 0, fontSize: 12 }}>
-        {product.stock > 0 ? "Add to Cart" : "Stock Out"}
-      </button>
+      <div style={{ display: "flex", gap: 6, padding: "0 10px 10px" }}>
+        <button onClick={onAddToCart} disabled={product.stock <= 0}
+          className="offer-card-btn">
+          {product.stock > 0 ? "Add to Cart" : "Stock Out"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -161,9 +140,8 @@ function ProductDetail({ slug }: { slug: string }) {
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewError, setReviewError] = useState("");
   const [reviewSuccess, setReviewSuccess] = useState("");
-  const [imageZoom, setImageZoom] = useState(false);
-  const [zoomPos, setZoomPos] = useState({ x: 0, y: 0 });
-  const imageRef = useRef<HTMLDivElement>(null);
+  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
 
   useEffect(() => {
     getProductBySlug(slug).then((data) => {
@@ -188,14 +166,6 @@ function ProductDetail({ slug }: { slug: string }) {
     });
   }, [slug, user]);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!imageRef.current) return;
-    const rect = imageRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setZoomPos({ x, y });
-  };
-
   const handleAddToCart = () => {
     if (!product) return;
     addToCart(product, quantity);
@@ -206,20 +176,31 @@ function ProductDetail({ slug }: { slug: string }) {
     if (!product) return;
     if (!inStock) return;
     if (quantity > maxAllowed) return;
-    window.location.href = `/izu_shop/checkout/${product.slug}?qty=${quantity}`;
+    window.location.href = `/checkout/${product.slug}?qty=${quantity}`;
   };
 
   if (loading) {
-    return <><Header /><div style={{ textAlign: "center", padding: "80px 24px" }}><div style={{ fontSize: 48, marginBottom: 16 }}>⏳</div><h3 style={{ fontSize: 22, fontWeight: 800, color: "#1a1a1a" }}>Loading...</h3></div><Footer /></>;
+    return <><Header /><div className="offer-empty" style={{ paddingTop: 80 }}><div className="offer-spinner" /><h3 className="offer-empty-title" style={{ marginTop: 20 }}>Loading Product</h3></div><Footer /></>;
   }
 
   if (!product) {
     return (
       <><Header />
-        <div style={{ textAlign: "center", padding: "80px 24px" }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>😕</div>
-          <h3 style={{ fontSize: 22, fontWeight: 800, color: "#1a1a1a", marginBottom: 12 }}>Product Not Found</h3>
-          <a href="/izu_shop" style={{ display: "inline-block", background: "#e8320a", color: "#fff", padding: "12px 32px", borderRadius: 12, textDecoration: "none", fontWeight: 700 }}>Back to Shop</a>
+        <div className="offer-empty">
+          <div className="offer-empty-icon">
+            <svg width="72" height="72" viewBox="0 0 80 80" fill="none">
+              <circle cx="40" cy="40" r="28" stroke="#d4d4d4" strokeWidth="2.5" fill="#f9f9f9"/>
+              <path d="M32 32l16 16M48 32l-16 16" stroke="#e0e0e0" strokeWidth="2.5" strokeLinecap="round"/>
+              <circle cx="56" cy="56" r="14" fill="#fef2f0" stroke="#e8320a" strokeWidth="2"/>
+              <path d="M52 56h8M56 52v8" stroke="#e8320a" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <h3 className="offer-empty-title">Product Not Found</h3>
+          <p className="offer-empty-desc">The product you&apos;re looking for doesn&apos;t exist or has been removed.</p>
+          <a href="/" className="offer-empty-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10"/></svg>
+            Back to Shop
+          </a>
         </div>
         <Footer />
       </>
@@ -228,33 +209,33 @@ function ProductDetail({ slug }: { slug: string }) {
 
   const originalPrice = parseFloat(product.regular_price || "0");
   const sellPrice = parseFloat(product.sell_price || "0");
-  const discount = calcDiscount(originalPrice, sellPrice);
   const maxAllowed = Math.max(1, Math.floor(product.stock * 0.7));
   const inStock = product.stock > 0;
 
   const tabBtnStyle = (isActive: boolean): React.CSSProperties => ({
-    padding: "12px 20px",
+    padding: "10px 20px",
     fontSize: 14,
-    fontWeight: 700,
-    color: isActive ? "#e8320a" : "#999",
+    fontWeight: isActive ? 700 : 500,
+    color: isActive ? "#1a1a1a" : "#999",
     border: "none",
     borderBottom: isActive ? "2px solid #e8320a" : "2px solid transparent",
     background: "transparent",
     cursor: "pointer",
     whiteSpace: "nowrap",
-    transition: "all 0.2s",
+    marginBottom: -1,
+    transition: "all 0.15s",
   });
 
   return (
     <>
       <Header />
 
-
-
       <div className="izu-pd-container">
         {/* Breadcrumb */}
         <nav className="izu-pd-breadcrumb">
-          <a href="/">Homes</a>
+          <a href="/" style={{ display: "inline-flex", alignItems: "center", color: "inherit", textDecoration: "none" }}>
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10" /></svg>
+          </a>
           <span className="izu-pd-breadcrumb-sep">/</span>
           <span className="izu-pd-breadcrumb-current">{product.name}</span>
         </nav>
@@ -263,15 +244,10 @@ function ProductDetail({ slug }: { slug: string }) {
         <div className="izu-pd-grid">
           {/* Left: Image */}
           <div className="izu-pd-left">
-            <div ref={imageRef}
-              className="izu-pd-image-sec"
-              onMouseEnter={() => setImageZoom(true)}
-              onMouseLeave={() => setImageZoom(false)}
-              onMouseMove={handleMouseMove}
+            <div className="izu-pd-image-sec"
               onClick={() => setLightboxImage(selectedImage || product.image || "")}>
               {selectedImage ? (
-                <img src={selectedImage.startsWith("http") ? selectedImage : `${BASE_URL}${selectedImage}`} alt={product.name}
-                  style={imageZoom ? { transform: "scale(1.8)", transformOrigin: `${zoomPos.x}% ${zoomPos.y}%` } : undefined} />
+                <img src={selectedImage.startsWith("http") ? selectedImage : `${BASE_URL}${selectedImage}`} alt={product.name} />
               ) : (
                 <div style={{ fontSize: 48, color: "#ccc" }}>📦</div>
               )}
@@ -290,42 +266,69 @@ function ProductDetail({ slug }: { slug: string }) {
 
           {/* Right: Info */}
           <div>
-            {product.badge && <span className="izu-pd-badge">{product.badge}</span>}
             <h1 className="izu-pd-name">{product.name}</h1>
 
-            {/* Rating */}
-            <div className="izu-pd-rating">
-              <StarRating rating={reviews.length > 0 ? Math.round(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) : 0} />
-              <span style={{ fontSize: 12, color: "#999" }}>
-                {reviews.length > 0
-                  ? `${(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)} (${reviews.length} review${reviews.length > 1 ? "s" : ""})`
-                  : "No reviews yet"}
-              </span>
-            </div>
+            {/* Info Table (Status, Condition, Category) */}
+            <table className="izu-pd-info-table">
+              <tbody>
+                <tr><td>Status</td><td>{inStock ? "In Stock" : "Stock Out"}</td></tr>
+                <tr><td>Condition</td><td>New</td></tr>
+                {typeof product.category === "object" && product.category && (
+                  <tr><td>Category</td><td><a href={`/category/${product.category.slug}`}>{product.category.name}</a></td></tr>
+                )}
+              </tbody>
+            </table>
 
             {/* Price */}
             <div className="izu-pd-price-row">
               <span className="izu-pd-current-price">{formatPrice(sellPrice)}</span>
-              {originalPrice > 0 && <>
-                <span className="izu-pd-old-price">{formatPrice(originalPrice)}</span>
-                <span className="izu-pd-discount-badge">-{discount}%</span>
-              </>}
+              {originalPrice > 0 && <span className="izu-pd-old-price">{formatPrice(originalPrice)}</span>}
             </div>
 
-            {/* Stock */}
-            <div className={`izu-pd-stock ${inStock ? "in" : "out"}`}>
-              <span className={`izu-pd-dot ${inStock ? "in" : "out"}`} />
-              {inStock ? `In Stock (${product.stock} available)` : "Stock Out"}
-            </div>
+            <hr className="izu-pd-divider" />
 
             {/* Description */}
             <p className="izu-pd-desc">
               {product.description || "No description available."}
             </p>
 
-            {/* Quantity + Actions */}
+            {/* Color Variant */}
+            <div className="izu-pd-variant">
+              <div className="izu-pd-variant-label">Color :</div>
+              <div className="izu-pd-color-options">
+                {[
+                  { name: "Black", hex: "#000000" },
+                  { name: "White", hex: "#ffffff" },
+                  { name: "Navy Blue", hex: "#1a237e" },
+                  { name: "Gray", hex: "#808080" },
+                ].map((c) => (
+                  <button key={c.name} onClick={() => setSelectedColor(c.name)}
+                    className={`izu-pd-color-btn ${selectedColor === c.name ? "active" : ""}`}>
+                    <span className="izu-pd-color-swatch" style={{ background: c.hex }} />
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Size Variant */}
+            <div className="izu-pd-variant">
+              <div className="izu-pd-variant-label">Size :</div>
+              <div className="izu-pd-size-options">
+                {["M", "L", "XL", "XXL"].map((s) => (
+                  <button key={s} onClick={() => setSelectedSize(s)}
+                    className={`izu-pd-size-btn ${selectedSize === s ? "active" : ""}`}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <hr className="izu-pd-divider" />
+
+            {/* Quantity */}
             {inStock && (
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+              <div className="izu-pd-qty">
                 <span className="izu-pd-qty-label">Quantity:</span>
                 <div className="izu-pd-qty-control">
                   <button className="izu-pd-qty-btn" onClick={() => setQuantity(Math.max(1, quantity - 1))}>−</button>
@@ -335,9 +338,10 @@ function ProductDetail({ slug }: { slug: string }) {
               </div>
             )}
 
+            {/* Actions */}
             <div className="izu-pd-actions">
               <button onClick={handleAddToCart} disabled={!inStock} className="izu-pd-cart-btn">
-                🛒 Add to Cart
+                Add to Cart
               </button>
               <button onClick={handleBuyNow} disabled={!inStock} className="izu-pd-buy-btn">
                 Buy Now
@@ -346,45 +350,24 @@ function ProductDetail({ slug }: { slug: string }) {
 
             <a href={`https://wa.me/8801635275630?text=Hi, I'm interested in "${product.name}" (${formatPrice(sellPrice)})`}
               target="_blank" rel="noopener noreferrer" className="izu-pd-whatsapp">
-              <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.76-1.653-2.059-.173-.3-.018-.462.13-.61.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
               Order via WhatsApp
             </a>
           </div>
         </div>
 
         {/* Tabs */}
-        <div style={{ marginBottom: 40 }}>
-          <div style={{ display: "flex", borderBottom: "2px solid #e8e8e8", marginBottom: 20, overflowX: "auto" }}>
-            <button onClick={() => setActiveTab("details")} style={tabBtnStyle(activeTab === "details")}>Description</button>
-            <button onClick={() => setActiveTab("specs")} style={tabBtnStyle(activeTab === "specs")}>Specifications</button>
-            <button onClick={() => setActiveTab("reviews")} style={tabBtnStyle(activeTab === "reviews")}>Reviews ({reviews.length})</button>
+        <div className="izu-pd-tabs" style={{ marginBottom: 40 }}>
+          <div className="izu-pd-tab-bar" style={{ display: "flex", borderBottom: "1px solid #e8e8e8", marginBottom: 20, overflowX: "auto" }}>
+            <button onClick={() => setActiveTab("details")} className="izu-pd-tab-btn" style={tabBtnStyle(activeTab === "details")}>Description</button>
+            <button onClick={() => setActiveTab("reviews")} className="izu-pd-tab-btn" style={tabBtnStyle(activeTab === "reviews")}>Reviews ({reviews.length})</button>
           </div>
 
-          <div style={{ background: "#fff", border: "1px solid #e8e8e8", borderRadius: 8, padding: 24, minHeight: 150 }}>
+          <div style={{ minHeight: 150 }}>
             {activeTab === "details" && (
               <div>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a", marginBottom: 12 }}>Product Overview</h3>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a", marginBottom: 12 }}>Description</h3>
                 <p style={{ lineHeight: 1.7, color: "#555" }}>{product.description || "No description available."}</p>
               </div>
-            )}
-
-            {activeTab === "specs" && (
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <tbody>
-                  {[
-                    ["Product Name", product.name],
-                    ["Category", typeof product.category === "object" && product.category ? product.category.name || "" : ""],
-                    ["Price", `৳${sellPrice}${originalPrice > 0 ? ` (Regular: ৳${originalPrice})` : ""}`],
-                    ["Stock", inStock ? `In Stock (${product.stock} units)` : "Out of Stock"],
-                    ["Product Code", `#PRD-${product.id}`],
-                  ].map(([label, value], i) => (
-                    <tr key={i}>
-                      <td style={{ padding: 12, borderBottom: "1px solid #f0f0f0", fontWeight: 700, color: "#555", width: 200, fontSize: 13.5 }}>{label}</td>
-                      <td style={{ padding: 12, borderBottom: "1px solid #f0f0f0", color: "#1a1a1a", fontSize: 13.5 }}>{value}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             )}
 
             {activeTab === "reviews" && (
@@ -416,19 +399,19 @@ function ProductDetail({ slug }: { slug: string }) {
                     ))}
                   </div>
                 ) : (
-                  <div style={{ textAlign: "center", padding: "32px 20px", color: "#999", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, background: "#f8f9fa", borderRadius: 8, border: "1px dashed #e5e7eb" }}>
+                  <div className="izu-review-empty" style={{ textAlign: "center", padding: "32px 20px", color: "#999", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, background: "#f8f9fa", borderRadius: 8, border: "1px dashed #e5e7eb" }}>
                     <span style={{ fontSize: 40 }}>💬</span>
                     <p>No reviews yet. Be the first to share your experience!</p>
                   </div>
                 )}
 
                 {/* Review Form */}
-                <div style={{ background: "#f8f9fa", border: "1px solid #e5e7eb", borderRadius: 10, padding: 20, marginTop: 24 }}>
+                <div className="izu-review-form-box" style={{ background: "#f8f9fa", border: "1px solid #e5e7eb", borderRadius: 10, padding: 20, marginTop: 24 }}>
                   <h3 style={{ fontSize: 15, fontWeight: 700, color: "#1a1a1a", marginBottom: 16 }}>Write a Review</h3>
                   {!user ? (
                     <div style={{ textAlign: "center", padding: "24px 16px", background: "#fafafa", border: "1px solid #f0f0f0", borderRadius: 8 }}>
                       <p style={{ fontSize: 13, color: "#555", fontWeight: 500, marginBottom: 12 }}>Please login to write a review.</p>
-                      <a href="/izu_shop/auth" style={{ display: "inline-block", background: "#e8320a", color: "#fff", border: "none", borderRadius: 6, padding: "9px 24px", fontSize: 13, fontWeight: 600, cursor: "pointer", textDecoration: "none" }}>Login</a>
+                      <a href="/auth" style={{ display: "inline-block", background: "#e8320a", color: "#fff", border: "none", borderRadius: 6, padding: "9px 24px", fontSize: 13, fontWeight: 600, cursor: "pointer", textDecoration: "none" }}>Login</a>
                     </div>
                   ) : (
                     <>
@@ -459,7 +442,7 @@ function ProductDetail({ slug }: { slug: string }) {
                         } catch { setReviewError("Network error. Please try again."); }
                         finally { setReviewSubmitting(false); }
                       }} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                        <div className="izu-review-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                             <label style={{ fontSize: 12, fontWeight: 600, color: "#555" }}>Posting as</label>
                             <input type="text" value={reviewName} readOnly style={{ height: 38, border: "1.5px solid #d1d5db", borderRadius: 6, padding: "0 12px", fontSize: 13, color: "#555", background: "#f3f4f6", cursor: "default", outline: "none" }} />
@@ -497,14 +480,16 @@ function ProductDetail({ slug }: { slug: string }) {
         {relatedProducts.length > 0 && (
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 800, color: "#1a1a1a", position: "relative", paddingLeft: 12 }}>
-                <span style={{ position: "absolute", left: 0, top: 3, bottom: 3, width: 4, background: "#e8320a", borderRadius: 2 }} />
+              <h2 className="izu-related-title" style={{ margin: 0 }}>
+                <span style={{ display: "inline-block", width: 4, height: 20, background: "#e8320a", borderRadius: 2, marginRight: 10, verticalAlign: "middle" }} />
                 Related Products
               </h2>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12 }}>
+            <div className="izu-related-row">
               {relatedProducts.map((p) => (
-                <ProductCard key={p.id} product={p} onAddToCart={() => { addToCart(p); openCart(); }} />
+                <div key={p.id} className="izu-related-card-wrap">
+                  <ProductCard product={p} onAddToCart={() => { addToCart(p); openCart(); }} />
+                </div>
               ))}
             </div>
           </div>

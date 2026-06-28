@@ -1,29 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { useCart } from "../../cart-context";
-import Header from "../../_components/Header";
-import Footer from "../../_components/Footer";
-import "../../izu_shop.css";
+import { useCart } from "../cart-context";
+import Header from "../_components/Header";
+import Footer from "../_components/Footer";
+import "../izu_shop.css";
 
 interface Product {
-  id: number;
-  category: any;
-  name: string;
-  slug: string;
-  image: string | null;
-  description: string;
-  sell_price: string;
-  regular_price: string | null;
-  stock: number;
-  is_active: boolean;
-  is_new_arrivals?: boolean;
-  created_at: string;
-  badge?: string;
+  id: number; category: any; name: string; slug: string;
+  image: string | null; description: string;
+  sell_price: string; regular_price: string | null;
+  stock: number; is_active: boolean; created_at: string;
 }
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "";
+const PAGE_SIZE = 20;
 
 function formatPrice(price: number) {
   return `৳${price.toLocaleString("en-BD")}`;
@@ -46,60 +37,22 @@ function CartIcon({ size }: { size: number }) {
   );
 }
 
-function CategoryContent() {
+function AllProductsContent() {
   const { addToCart, openCart } = useCart();
-  const params = useParams();
-  const slug = params.slug as string;
-
   const [products, setProducts] = useState<Product[]>([]);
-  const [categoryTitle, setCategoryTitle] = useState("");
   const [loading, setLoading] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(20);
-  const [showAll, setShowAll] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [sortBy, setSortBy] = useState("default");
 
   useEffect(() => {
-    async function load() {
-      setLoading(true);
-      setVisibleCount(20);
-      setShowAll(false);
-
-      try {
-        // Resolve category name and fetch products
-        let foundName = "";
-        const catRes = await fetch(`${BASE_URL}/api/categories/list/`);
-        if (catRes.ok) {
-          const cats = await catRes.json();
-          const found = cats.find((cat: any) =>
-            cat.slug?.toLowerCase() === slug.toLowerCase() ||
-            cat.name?.toLowerCase().replace(/\s+/g, "-") === slug.toLowerCase()
-          );
-          if (found) foundName = found.name;
-        }
-        setCategoryTitle(foundName || slug.charAt(0).toUpperCase() + slug.slice(1));
-
-        // Fetch all products and filter by category
-        const allProducts: Product[] = await (await fetch(`${BASE_URL}/api/products/list/`)).json();
-        const filtered = allProducts.filter((product) => {
-          if (!product.category) return false;
-          const prodSlug = typeof product.category === "object"
-            ? (product.category as { slug?: string }).slug?.toLowerCase()
-            : "";
-          const prodName = typeof product.category === "object"
-            ? (product.category as { name?: string }).name?.toLowerCase().replace(/\s+/g, "-")
-            : "";
-          return prodSlug === slug.toLowerCase() || prodName === slug.toLowerCase();
-        });
-        setProducts(filtered);
-      } catch (error) {
-        console.error("Failed to load category products:", error);
-      } finally {
+    fetch(`${BASE_URL}/api/products/list/`)
+      .then((res) => res.json())
+      .then((data) => {
+        setProducts(Array.isArray(data) ? data : Array.isArray(data?.results) ? data.results : []);
         setLoading(false);
-      }
-    }
-
-    load();
-  }, [slug]);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   const sortedProducts = [...products].sort((a, b) => {
     if (sortBy === "price-low") return parseFloat(a.sell_price) - parseFloat(b.sell_price);
@@ -107,8 +60,8 @@ function CategoryContent() {
     return 0;
   });
 
-  const displayedProducts = (showAll ? sortedProducts : sortedProducts.slice(0, visibleCount));
-  const hasMore = !showAll && visibleCount < products.length;
+  const displayedProducts = sortedProducts.slice(0, visibleCount);
+  const hasMore = visibleCount < products.length;
 
   function handleAddToCart(product: Product) {
     addToCart(product, 1);
@@ -118,31 +71,31 @@ function CategoryContent() {
   return (
     <>
       <Header />
-      <div className="offer-page" style={{ paddingTop: 32 }} id="izu-grid">
+      <div className="offer-page" style={{ paddingTop: 16 }}>
         <nav className="izu-pd-breadcrumb" style={{ marginBottom: 16 }}>
           <a href="/" style={{ display: "inline-flex", alignItems: "center", color: "inherit", textDecoration: "none" }}>
             <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10" /></svg>
           </a>
           <span className="izu-pd-breadcrumb-sep">/</span>
-          <span className="izu-pd-breadcrumb-current">{categoryTitle || "Category"}</span>
+          <span className="izu-pd-breadcrumb-current">All Products</span>
         </nav>
 
-        <div className="all-products-header" style={{ marginBottom: 24 }}>
-          <h2 className="all-products-title">{categoryTitle || "Category"}</h2>
-          {!loading && products.length > 0 && (
-            <div className="all-products-sort">
-              <label style={{ fontSize: 13, color: "#888", fontWeight: 600, whiteSpace: "nowrap" }}>Sort by:</label>
-              <select value={sortBy} onChange={(e) => { setSortBy(e.target.value); setVisibleCount(20); setShowAll(false); }}
-                style={{
-                  padding: "8px 14px", border: "1px solid #e8e8e8", borderRadius: 8,
-                  fontSize: 13, fontWeight: 500, color: "#1a1a1a", background: "#fff",
-                  cursor: "pointer", fontFamily: "inherit", outline: "none",
-                }}>
-                <option value="default">Default</option>
-                <option value="price-low">Low to High</option>
-                <option value="price-high">High to Low</option>
-              </select>
-            </div>
+        <div className="all-products-header">
+          <h1 className="all-products-title">All Products</h1>
+          {!loading && displayedProducts.length > 0 && (
+          <div className="all-products-sort">
+            <label style={{ fontSize: 13, color: "#888", fontWeight: 600, whiteSpace: "nowrap" }}>Sort by:</label>
+            <select value={sortBy} onChange={(e) => { setSortBy(e.target.value); setVisibleCount(PAGE_SIZE); }}
+              style={{
+                padding: "8px 14px", border: "1px solid #e8e8e8", borderRadius: 8,
+                fontSize: 13, fontWeight: 500, color: "#1a1a1a", background: "#fff",
+                cursor: "pointer", fontFamily: "inherit", outline: "none",
+              }}>
+<option value="default">Default</option>
+            <option value="price-low">Low to High</option>
+            <option value="price-high">High to Low</option>
+            </select>
+          </div>
           )}
         </div>
 
@@ -150,9 +103,8 @@ function CategoryContent() {
           <div className="offer-empty">
             <div className="offer-spinner" />
             <h3 className="offer-empty-title" style={{ marginTop: 20 }}>Loading Products</h3>
-            <p className="offer-empty-desc">Please wait while we fetch products for you.</p>
           </div>
-        ) : products.length > 0 ? (
+        ) : displayedProducts.length > 0 ? (
           <>
             <div className="offer-grid">
               {displayedProducts.map((product, index) => {
@@ -196,40 +148,11 @@ function CategoryContent() {
                 );
               })}
             </div>
-            {!showAll && products.length > 20 && (
-              <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 32 }}>
-                {hasMore && (
-                  <button
-                    onClick={() => setVisibleCount((prev) => prev + 20)}
-                    style={{
-                      background: "none", border: "2px solid #e8320a", color: "#e8320a",
-                      padding: "10px 36px", borderRadius: 8, fontSize: 14, fontWeight: 600,
-                      cursor: "pointer", transition: "all 0.2s", fontFamily: "inherit",
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = "#e8320a"; e.currentTarget.style.color = "#fff"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#e8320a"; }}
-                  >
-                    See More
-                  </button>
-                )}
+
+            {hasMore && (
+              <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
                 <button
-                  onClick={() => setShowAll(true)}
-                  style={{
-                    background: "#e8320a", border: "2px solid #e8320a", color: "#fff",
-                    padding: "10px 36px", borderRadius: 8, fontSize: 14, fontWeight: 600,
-                    cursor: "pointer", transition: "all 0.2s", fontFamily: "inherit",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "#cc2908"; e.currentTarget.style.borderColor = "#cc2908"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "#e8320a"; e.currentTarget.style.borderColor = "#e8320a"; }}
-                >
-                  View All
-                </button>
-              </div>
-            )}
-            {showAll && products.length > 20 && (
-              <div style={{ textAlign: "center", marginTop: 32 }}>
-                <button
-                  onClick={() => { setShowAll(false); setVisibleCount(20); }}
+                  onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
                   style={{
                     background: "none", border: "2px solid #e8320a", color: "#e8320a",
                     padding: "10px 36px", borderRadius: 8, fontSize: 14, fontWeight: 600,
@@ -238,7 +161,7 @@ function CategoryContent() {
                   onMouseEnter={(e) => { e.currentTarget.style.background = "#e8320a"; e.currentTarget.style.color = "#fff"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#e8320a"; }}
                 >
-                  Show Less
+                  See More
                 </button>
               </div>
             )}
@@ -254,8 +177,8 @@ function CategoryContent() {
                 <path d="M52 56h8M56 52v8" stroke="#e8320a" strokeWidth="2" strokeLinecap="round"/>
               </svg>
             </div>
-            <h3 className="offer-empty-title">No products found</h3>
-            <p className="offer-empty-desc">We couldn&apos;t find anything under <strong>{categoryTitle}</strong>. Try browsing other categories.</p>
+            <h3 className="offer-empty-title">No products available</h3>
+            <p className="offer-empty-desc">We don&apos;t have any products right now. Please check back later.</p>
             <a href="/" className="offer-empty-btn">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10"/></svg>
               Browse Home
@@ -268,6 +191,6 @@ function CategoryContent() {
   );
 }
 
-export default function CategoryPage() {
-  return <CategoryContent />;
+export default function AllProductsPage() {
+  return <AllProductsContent />;
 }
