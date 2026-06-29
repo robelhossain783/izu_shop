@@ -123,7 +123,7 @@ function AllProductsContent() {
                     {discount > 0 && <div className="offer-card-badge">-{discount}%</div>}
                     <div className="offer-card-img" style={{ background: `linear-gradient(135deg, ${color}15, ${color}08)` }}>
                       {product.image ? (
-                        <img src={product.image} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }} />
+                        <img src={product.image.startsWith("http") ? product.image : `${BASE_URL}${product.image}`} alt={product.name} style={{ maxWidth: "100%", maxHeight: "100%", width: "auto", height: "auto", objectFit: "contain", display: "block", transition: "transform 0.3s" }} />
                       ) : (
                         <>
                           <span className="offer-card-img-emoji">{emoji}</span>
